@@ -1,1 +1,143 @@
-hellow word;
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>无标题文档</title>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<style>
+html,body{
+	width:100%;
+	height:100%;
+	background:#ccc;
+	overflow:hidden;
+}
+#box{
+	width:181px;
+	height:300px;
+	text-align:center;
+	line-height:150px;
+	position:absolute;
+	top:0;
+	left:0;
+	-webkit-transform:translate(0px,0px) rotate(0deg);
+	-moz-transform:translate(0px,0px) rotate(0deg);
+	-ms-transform:translate(0px,0px) rotate(0deg);
+	-o-transform:translate(0px,0px) rotate(0deg);
+}
+</style>
+<script>
+function getDis(x1, y1, x2, y2){
+	var a=x1-x2;
+	var b=y1-y2;
+	return Math.sqrt(a*a+b*b);
+}
+
+function getAng(x1, y1, x2, y2){
+	var a=x2-x1;
+	var b=y2-y1;
+	return Math.atan2(b, a)*180/Math.PI;
+}
+window.onload=function(){
+	var oDiv=document.getElementById('box');
+	var timer1=null;
+	var timer2=null;
+	//物体信息
+	var rotate=0;
+	var x=0;
+	var y=0;
+	//var w=oDiv.offsetWidth;
+	//var h=oDiv.offsetHeight ;
+	oDiv.addEventListener('touchstart',function(ev){
+		var touches=ev.targetTouches;
+		//检测2个手指->旋转、缩放
+		clearInterval(timer1);
+		timer1=setInterval(function(ev){
+			var num=touches.length;
+			if(num==2){//2根手指
+				clearInterval(timer1);
+				clearTimeout(timer2);
+				//oldW/H
+				var oldW=oDiv.offsetWidth;
+				var oldH=oDiv.offsetHeight;
+				//oldDis
+				var oldDis=getDis(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
+				//oldPageX/Y
+				var oldPageX=touches[0].pageX;
+				var oldPageY=touches[0].pageY;
+				//oldLeft/Top
+				var oldLeft=x;
+				var oldTop=y;
+				//旋转
+				//oldAng
+				var oldAng=getAng(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
+				var downRotate=rotate;
+				function move(ev){
+					var touches=ev.targetTouches;
+					//缩放
+					//newDis
+					var newDis=getDis(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
+					//newPageX
+					var newPageX=touches[0].pageX;
+					var newPageY=touches[0].pageY;
+					//旋转
+					var newAng=getAng(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
+					//大小
+					oDiv.style.width=newDis*oldW/oldDis+'px';
+					oDiv.style.height=newDis*oldH/oldDis+'px';
+					//位置
+					x=newPageX-oDiv.offsetWidth*(oldPageX-oldLeft)/oldW;
+					y=newPageY-oDiv.offsetHeight*(oldPageY-oldTop)/oldH;
+					oDiv.style.left=x+'px';
+					oDiv.style.top=y+'px';
+					//旋转
+					var ang=newAng-oldAng;
+					rotate=downRotate+ang;
+					oDiv.style.WebkitTransform='rotate('+rotate+'deg)';
+					oDiv.style.MozTransform='rotate('+rotate+'deg)';
+					oDiv.style.MsTransform='rotate('+rotate+'deg)';
+				}
+				function end(){
+					oDiv.removeEventListener('touchmove', move, false);
+					oDiv.removeEventListener('touchend', end, false);
+				}
+				oDiv.addEventListener('touchmove', move, false);
+				oDiv.addEventListener('touchend', end, false);
+				ev.preventDefault();
+			}
+		},30);
+		//检测一个手指->拖拽
+		clearTimeout(timer2);	
+		timer2=setTimeout(function(){
+			clearInterval(timer1);
+			var disX=ev.targetTouches[0].pageX-x;
+			var disY=ev.targetTouches[0].pageY-y;
+			var id=ev.targetTouches[0].identifier;
+			function fnMove(ev){
+				if(ev.targetTouches[0].identifier==id){
+					x=ev.targetTouches[0].pageX-disX;
+					y=ev.targetTouches[0].pageY-disY;
+					oDiv.style.WebkitTransform='translate('+x+'px,'+y+'px) rotate('+rotate+'deg)';
+					oDiv.style.MozkitTransform='translate('+x+'px,'+y+'px) rotate('+rotate+'deg)';
+					oDiv.style.MskitTransform='translate('+x+'px,'+y+'px) rotate('+rotate+'deg)';
+				}
+			}
+			function fnEnd(ev){
+				if(ev.changedTouches[0].identifier==id){
+					
+					document.removeEventListener('touchmove',fnMove,false);
+					document.removeEventListener('touchend',fnEnd,false);
+				}
+			}
+			document.addEventListener('touchmove',fnMove,false);
+			document.addEventListener('touchend',fnEnd,false);
+			ev.preventDefault();
+		},300);
+	},false);
+};
+</script>
+</head>
+<body>
+<img id="box" src="icon.jpg" />
+</body>
+</html>
+
